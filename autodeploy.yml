@@ -1,0 +1,332 @@
+---
+- hosts: localhost
+  tasks:
+    - name: installing the colletions
+      shell: ansible-galaxy collection install community.general
+- hosts: routers
+  tasks:
+    - name: Configure packet forwarding
+      lineinfile:
+        path: /etc/sysctl.conf
+        line: net.ipv4.ip_forward=1
+        insertafter: EOF
+    - name: Apply sysctl config-file
+      shell: sysctl -p
+    - name: Commenting the cdrom update
+      copy:
+        src: ./sources.list
+        dest: /etc/apt/sources.list
+        mode: "0655"
+    - name: Update apt
+      apt:
+        update_cache: yes
+      ignore_errors: true
+
+    - name: Install package
+      apt: 
+        pkg:
+          - strongswan
+          - nginx
+          - ufw
+    - name: Open ports for SSH
+      community.general.ufw:
+        rule: allow
+        port: '1111'
+        proto: tcp
+
+- hosts: 200.100.200.100 #FW
+  tasks:
+    - name: Configure iptables
+      ansible.builtin.iptables:
+        table: nat
+        chain: POSTROUTING
+        out_interface: ens192
+        src_range: 172.20.0.0-172.20.255.255
+        jump: MASQUERADE
+    - name: Saving iptables
+      community.general.iptables_state:
+        state: saved
+        path: /etc/iptables/rules.v4
+
+    - name: Check FM
+      command: hostname
+      register: hostname
+    - name: Hostname FW
+      hostname:
+        name: FW
+      when: hostname.stdout != "FW"
+    - name: Reboot after hostname
+      reboot:
+      when: hostname.stdout != "FW"
+
+    - name: copy script GRE tunnel
+      copy:
+        src: ./FW_gre.up
+        dest: /etc/FW_gre.up
+        mode: "0777"
+    - name: start the GRE tunnel script
+      shell: /etc/FW_gre.up
+      ignore_errors: true
+    - name: set crontab
+      lineinfile:
+        path: /etc/crontab
+        line: "@reboot root /etc/FW_gre.up"
+        insertafter: EOF
+    - name: Static route
+      shell: ip route add 192.168.0.0/16 via 10.20.20.2
+      ignore_errors: true
+
+    - name: copy conf IPSEC
+      copy:
+        src: ./ipsec_FW.conf
+        dest: /etc/ipsec.conf
+        mode: "0655"
+    - name: IPSEC secrets
+      lineinfile:
+        path: /etc/ipsec.secrets
+        line: "200.100.100.100 200.100.200.100 : PSK \"2022\""
+        insertafter: EOF
+    - name: IPSEC start
+      shell: ipsec start
+      ignore_errors: true 
+    - name: Config NGINX proxy
+      copy:
+        src: ./hyproxy.conf
+        dest: /etc/nginx/sites-enabled/default
+        mode: "0655"
+    - name: Restarting the NGINX
+      service:
+        name: nginx
+        state: restarted
+
+- hosts: 200.100.100.100 #CSR
+  tasks:
+    - name: Configure iptables
+      ansible.builtin.iptables:
+        table: nat
+        chain: POSTROUTING
+        out_interface: ens192
+        src_range: 192.168.0.0-192.168.255.255
+        jump: MASQUERADE
+    - name: Saving iptables
+      community.general.iptables_state:
+        state: saved
+        path: /etc/iptables/rules.v4
+
+    - name: Hostname CSR
+      hostname:
+        name: CSR
+    - name: Check CSR
+      command: hostname
+      register: hostname
+    - name: Hostname CSR
+      hostname:
+        name: CSR
+      when: hostname.stdout != "CSR"
+    - name: Reboot after hostname
+      reboot:
+      when: hostname.stdout != "CSR"
+
+    - name: copy script GRE tunnel
+      copy:
+        src: ./CSR_gre.up
+        dest: /etc/CSR_gre.up
+        mode: "0777"
+    - name: start the GRE tunnel script
+      shell: /etc/CSR_gre.up
+      ignore_errors: true
+    - name: Static route
+      shell: ip route add 172.20.0.0/16 via 10.20.20.1
+      ignore_errors: true 
+    - name: set crontab
+      lineinfile:
+        path: /etc/crontab
+        line: "@reboot root /etc/CSR_gre.up"
+        insertafter: EOF
+
+    - name: copy conf IPSEC
+      copy:
+        src: ./ipsec_CSR.conf
+        dest: /etc/ipsec.conf
+        mode: "0655"
+    - name: IPSEC secrets
+      lineinfile:
+        path: /etc/ipsec.secrets
+        line: "200.100.100.100 200.100.200.100 : PSK \"2022\""
+        insertafter: EOF
+    - name: IPSEC start
+      shell: ipsec start
+      ignore_errors: true
+
+- hosts: central
+  tasks:
+    - name: Update Apt
+      apt:
+        update_cache: yes
+    - name: Install Package
+      apt:
+        pkg:
+          - chrony
+          - bind9
+          - nginx
+          - keepalived
+          - docker
+          - docker.io
+          - ufw
+          - pip
+          - curl
+
+- hosts: 172.20.30.100 172.20.30.20
+  tasks:
+    - name: UFW port for ssh
+      ufw:
+        state: enabled
+        rule: allow
+        port: '22'
+      ufw:
+        rule: allow
+        port: '2022'
+    - name: UFW port for https
+      ufw:
+        rule: allow
+        port: '443'
+    - name: UFW port for http
+      ufw:
+        rule: allow
+        port: '80'
+
+    - name: Open port for Docker-compose
+      shell: curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    - name: Fix permissions for Docker-compose
+      shell: chmod +x /usr/local/bin/docker-compose
+    - name: Install Docker module for python
+      pip:
+        name: docker-compose
+    - name: Create folder
+      file:
+        path: /opt/project
+        state: directory
+        mode: '0777'
+    - name: Copy DockerComposition
+      copy:
+        src: ./docker-compose.yml
+        dest: /opt/project/docker-compose.yml
+    - name: deploy DockerCompose
+      docker_compose:
+        project_src: /opt/project
+        files:
+          - docker-compose.yml
+    - name: Configure Chrony
+      copy:
+        src: ./chrony_SRV.conf
+        dest: /etc/chrony/chrony.conf
+        mode: "0655"
+    - name: Restarted Chrony
+      service:
+        name: chronyd
+        state: restarted
+        
+- hosts: 172.20.30.100 #SRV-1
+  vars_files:
+    - ./vars.yml
+  tasks:
+    - name: Configure keepalived
+      copy:
+        src: ./keepalived_SRV1.conf
+        dest: /etc/keepalived/keepalived.conf
+        mode: "0644"
+    - name: DNS script
+      copy:
+        src: ./dns_check
+        dest: /usr/dns_check
+        mode: "0777"
+    - name: NTP script
+      copy:
+        src: ./ntp_check
+        dest: /usr/ntp_check
+        mode: "0777"
+    - name: Restart the keepalived
+      service:
+        name: keepalived
+        state: restarted
+    - name: Check Hostname
+      command: hostname
+      register: hostname100
+    - name: Set Hostname
+      hostname:
+        name: "{{ vm_name_srv1 }}"
+      when: hostname100.stdout != "{{ vm_name_srv1 }}"
+    - name: After change hostname - reboot
+      reboot:
+      when: hostname100.stdout != "{{ vm_name_srv1 }}"
+
+    - name: Install Docker module for python
+      pip:
+        name: docker
+    - name: Docker Deploy
+      community.docker.docker_container: 
+        name: WebSite
+        state: started
+        image: beezzlot/docker-test
+        ports:
+          - "80:8080"
+    - name: COnfigure SSH
+      copy:
+        src: ./sshd_config
+        dest: /etc/ssh/sshd_config
+    - name: Restart ssh
+      service:
+        name: sshd
+        state: restarted
+
+- hosts: 172.20.30.20 #SRV-2
+  vars_files:
+    - ./vars.yml
+  tasks:
+    - name: Configure keepalived
+      copy:
+        src: ./keepalived_SRV2.conf
+        dest: /etc/keepalived/keepalived.conf
+        mode: "0644"
+
+    - name: DNS script
+      copy:
+        src: ./dns_check
+        dest: /usr/dns_check
+        mode: "0777"
+
+    - name: NTP script
+      copy:
+        src: ./ntp_check
+        dest: /usr/ntp_check
+        mode: "0777"
+
+    - name: Restart the keepalived
+      service:
+        name: keepalived
+        state: restarted
+
+    - name: Install Docker module for python
+      pip:
+        name: docker
+
+    - name: Docker Deploy
+      community.docker.docker_container: 
+        name: WebSite1
+        state: started
+        image: beezzlot/docker-test
+        ports:
+          - "80:8080"
+
+    - name: Check Hostname
+      command: hostname
+      register: hostname200
+    - name: Set Hostname
+      hostname:
+        name: "{{ vm_name_srv2 }}"
+      when: hostname200.stdout != "{{ vm_name_srv2 }}"
+    - name: After change hostname - reboot
+      reboot:
+      when: hostname200.stdout != "{{ vm_name_srv2 }}"
+
+
