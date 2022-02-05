@@ -365,6 +365,7 @@
         project_src: /opt/project
         files:
           - docker-compose.yml
+      ignore_errors: true
 
 - hosts: 172.20.30.100 172.20.30.20
   tasks:
@@ -404,14 +405,6 @@
     - name: Install Docker module for python
       pip:
         name: docker
-    - name: COnfigure SSH
-      copy:
-        src: ./sshd_config
-        dest: /etc/ssh/sshd_config
-    - name: Restart ssh
-      service:
-        name: sshd
-        state: restarted
 
     - name: Check Hostname
       command: hostname
@@ -424,6 +417,14 @@
       reboot:
       when: hostname100.stdout != "{{ vm_name_srv1 }}"
 
+    - name: COnfigure SSH
+      copy:
+        src: ./sshd_config
+        dest: /etc/ssh/sshd_config
+    - name: Restart ssh
+      service:
+        name: sshd
+        state: restarted
 - hosts: 172.20.30.20 #SRV-2
   vars_files:
     - ./vars.yml
@@ -474,4 +475,12 @@
       reboot:
       when: hostname200.stdout != "{{ vm_name_srv2 }}"
 
+    - name: COnfigure SSH
+      copy:
+        src: ./sshd_config
+        dest: /etc/ssh/sshd_config
+    - name: Restart ssh
+      service:
+        name: sshd
+        state: restarted
 
