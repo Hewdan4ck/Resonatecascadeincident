@@ -3,14 +3,13 @@ services:
   postgresql:
     image: docker.io/bitnami/postgresql:11
     environment:
-      - POSTGRESQL_PASSWORD=bitnami
+      - POSTGRESQL_PASSWORD=superpuper
     volumes:
       - 'postgresql_data:/bitnami'
   phppgadmin:
     image: docker.io/bitnami/phppgadmin:7
     ports:
-      - '1777:8080'
-      - '8443:8443'
+      - '80:8080'
     depends_on:
       - postgresql
 volumes:
