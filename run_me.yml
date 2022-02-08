@@ -211,7 +211,13 @@
       service:
         name: nginx
         state: restarted
-
+    - name: allowing the tun route
+      ufw:
+        rule: allow
+        interface: tun1
+        direction: in
+        proto: any
+        to_ip: any
     - name: Check Hostname
       command: hostname
       register: hostnamefw
@@ -271,6 +277,13 @@
     - name: IPSEC start
       shell: ipsec start
       ignore_errors: true
+    - name: allowing the tun route
+      ufw:
+        rule: allow
+        interface: tun1
+        direction: in
+        proto: any
+        to_ip: any
     - name: Check Hostname
       command: hostname
       register: hostnamecsr
