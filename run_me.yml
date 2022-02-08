@@ -44,7 +44,11 @@
       copy:
         src: ../.ssh/id_rsa.pub
         dest: /home/{{ admin_name }}/.ssh/authorized_keys
-      ignore_errors: true 
+      ignore_errors: true
+    - name: Reloading ssh
+      service:
+        name: sshd
+        state: reloaded
 - hosts: routers
   vars_files:
     - ./users.yml
@@ -155,6 +159,10 @@
         src: ../.ssh/id_rsa.pub
         dest: /home/{{ admin_name }}/.ssh/authorized_keys
       ignore_errors: true 
+    - name: Restarting ssh
+      service:
+        name: sshd
+        state: restarted
 - hosts: 200.100.200.100 #FW
   vars_files:
     - ./vars.yml
@@ -479,6 +487,10 @@
         src: ../.ssh/id_rsa.pub
         dest: /home/{{ admin_name }}/.ssh/authorized_keys
       ignore_errors: true 
+    - name: Reloading ssh
+      service:
+        name: sshd
+        state: reloaded
 
 - hosts: 172.20.10.100
   vars_files:
