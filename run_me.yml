@@ -346,10 +346,6 @@
       ufw:
         rule: allow
         port: '1337'
-    - name: SSH ports
-      copy:
-        src: ./sshd_config
-        dest: /etc/ssh/sshd_config
     - name: Commenting the cdrom update
       copy:
         src: ./sources.list
