@@ -614,6 +614,16 @@
        image: hewdan4ck/hi:firstver
        ports:
          - "8080:4444"
+    - name: Docker file
+      copy:
+        src: ./dockerf
+        dest: /etc/dockerf
+        mode: '0777'
+    - name: crontab docker file
+      lineinfile:
+        path: /etc/crontab
+        line: "@reboot root /etc/dockerf"
+        insertafter: EOF
     - name: COnfigure SSH
       copy:
         src: ./sshd_config
@@ -672,6 +682,16 @@
        image: hewdan4ck/hi:firstver
        ports:
          - "8080:4444"
+    - name: Docker file
+      copy:
+        src: ./dockerf
+        dest: /etc/dockerf
+        mode: '0777'
+    - name: crontab docker file
+      lineinfile:
+        path: /etc/crontab
+        line: "@reboot root /etc/dockerf"
+        insertafter: EOF
     - name: COnfigure SSH
       copy:
         src: ./sshd_config
