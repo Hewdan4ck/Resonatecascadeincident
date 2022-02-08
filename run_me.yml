@@ -215,6 +215,21 @@
         state: restarted
 - hosts: 192.168.200.100
   tasks:
+    - name: Update Apt
+      apt:
+        update_cache: yes
+    - name: Install Package
+      apt:
+        pkg:
+          - chrony
+          - bind9
+          - nginx
+          - keepalived
+          - docker
+          - docker.io
+          - ufw
+          - pip
+          - curl
     - name: UFW port for ssh
       ufw:
         state: enabled
@@ -246,21 +261,6 @@
         src: ./sources.list
         dest: /etc/apt/sources.list
         mode: "0655"
-    - name: Update Apt
-      apt:
-        update_cache: yes
-    - name: Install Package
-      apt:
-        pkg:
-          - chrony
-          - bind9
-          - nginx
-          - keepalived
-          - docker
-          - docker.io
-          - ufw
-          - pip
-          - curl
     - name: Open port for Docker-compose
       shell: curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     - name: Fix permissions for Docker-compose
