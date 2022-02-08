@@ -562,7 +562,6 @@
   vars_files:
     - ./vars.yml
   tasks:
-    name: changing the hostname
     - name: Check Hostname
       command: hostname
       register: hostnameclil
