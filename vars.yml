@@ -5,4 +5,4 @@ vm_name_srv: SRV
 vm_name_fw: FW
 vm_name_csr: CSR
 vm_name_dc: DC
-vm_name_cli-l: CLI-L
+vm_name_cli_l: CLI-L

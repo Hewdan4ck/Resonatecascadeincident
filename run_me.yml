@@ -567,8 +567,8 @@
       register: hostnameclil
     - name: Set Hostname
       hostname:
-        name: "{{ vm_name_cli-l }}"
-      when: hostnameclil.stdout != "{{ vm_name_cli-l }}"
+        name: "{{ vm_name_cli_l }}"
+      when: hostnameclil.stdout != "{{ vm_name_cli_l }}"
     - name: After change hostname - reboot
       reboot:
-      when: hostnameclil.stdout != "{{ vm_name_cli-l }}"
+      when: hostnameclil.stdout != "{{ vm_name_cli_l }}"
