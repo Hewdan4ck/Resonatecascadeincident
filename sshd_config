@@ -29,7 +29,7 @@ Port 1111
 #LogLevel INFO
 
 # Authentication:
-AllowUsers root
+
 #LoginGraceTime 2m
 PermitRootLogin yes
 #StrictModes yes

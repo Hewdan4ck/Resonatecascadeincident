@@ -44,10 +44,15 @@
           - sudo
           - docker
         createhome: yes
+    - name: Create folder
+      file:
+        path: /home/{{ admin_name }}/.ssh
+        state: directory
+        mode: '0777'
     - name: Copying the key to new user
       copy:
         src: ../.ssh/id_rsa.pub
-        dest: /root/.ssh/authorized_keys
+        dest: /home/{{ admin_name }}/.ssh/authorized_keys
       ignore_errors: true 
     - name: Commenting the cdrom update
       copy:
@@ -313,6 +318,26 @@
       ufw:
         rule: allow
         port: '1337'
+    - name: Create User
+      user:
+        name: '{{ admin_name }}'
+        password: '{{ admin_pass | password_hash("sha512") }}'
+        state: present
+        shell: /bin/bash
+        groups:
+          - sudo
+          - docker
+        createhome: yes
+    - name: Create folder
+      file:
+        path: /home/{{ admin_name }}/.ssh
+        state: directory
+        mode: '0777'
+    - name: Copying the key to new user
+      copy:
+        src: ../.ssh/id_rsa.pub
+        dest: /home/{{ admin_name }}/.ssh/authorized_keys
+      ignore_errors: true 
     - name: Check Hostname
       command: hostname
       register: hostnamesrv
@@ -412,11 +437,26 @@
       ufw:
         rule: allow
         port: '1337'
-    - name: Commenting the cdrom update
+    - name: Create User
+      user:
+        name: '{{ admin_name }}'
+        password: '{{ admin_pass | password_hash("sha512") }}'
+        state: present
+        shell: /bin/bash
+        groups:
+          - sudo
+          - docker
+        createhome: yes
+    - name: Create folder
+      file:
+        path: /home/{{ admin_name }}/.ssh
+        state: directory
+        mode: '0777'
+    - name: Copying the key to new user
       copy:
-        src: ./sources.list
-        dest: /etc/apt/sources.list
-        mode: "0655"
+        src: ../.ssh/id_rsa.pub
+        dest: /home/{{ admin_name }}/.ssh/authorized_keys
+      ignore_errors: true 
 
 - hosts: 172.20.10.100
   vars_files:
