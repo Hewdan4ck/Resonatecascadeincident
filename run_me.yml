@@ -129,9 +129,6 @@
         path: /etc/crontab
         line: "@reboot root /etc/FW_gre.up"
         insertafter: EOF
-    - name: Static route
-      shell: ip route add 192.168.0.0/16 via 10.20.20.2
-      ignore_errors: true
 
     - name: copy conf IPSEC
       copy:
@@ -196,9 +193,6 @@
     - name: start the GRE tunnel script
       shell: /etc/CSR_gre.up
       ignore_errors: true
-    - name: Static route
-      shell: ip route add 172.20.0.0/16 via 10.20.20.1
-      ignore_errors: true 
     - name: set crontab
       lineinfile:
         path: /etc/crontab
