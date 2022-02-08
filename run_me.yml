@@ -295,6 +295,21 @@
         state: restarted
 - hosts: central
   tasks: 
+    - name: Update Apt
+      apt:
+        update_cache: yes
+    - name: Install Package
+      apt:
+        pkg:
+          - chrony
+          - bind9
+          - nginx
+          - keepalived
+          - docker
+          - docker.io
+          - ufw
+          - pip
+          - curl
     - name: UFW port for ssh
       ufw:
         state: enabled
@@ -326,21 +341,6 @@
         src: ./sources.list
         dest: /etc/apt/sources.list
         mode: "0655"
-    - name: Update Apt
-      apt:
-        update_cache: yes
-    - name: Install Package
-      apt:
-        pkg:
-          - chrony
-          - bind9
-          - nginx
-          - keepalived
-          - docker
-          - docker.io
-          - ufw
-          - pip
-          - curl
 
 - hosts: 172.20.10.100
   tasks:
