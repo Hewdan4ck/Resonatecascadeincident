@@ -215,6 +215,11 @@
         state: restarted
 - hosts: 192.168.200.100
   tasks:
+    - name: Commenting the cdrom update
+      copy:
+        src: ./sources.list
+        dest: /etc/apt/sources.list
+        mode: "0655"
     - name: Update Apt
       apt:
         update_cache: yes
@@ -295,6 +300,11 @@
         state: restarted
 - hosts: central
   tasks: 
+    - name: Commenting the cdrom update
+      copy:
+        src: ./sources.list
+        dest: /etc/apt/sources.list
+        mode: "0655"
     - name: Update Apt
       apt:
         update_cache: yes
