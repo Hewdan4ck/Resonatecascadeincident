@@ -24,6 +24,8 @@
           - curl
           - lynx
 - hosts: routers
+  vars_files:
+    - ./users.yml
   tasks:
     - name: Configure packet forwarding
       lineinfile:
@@ -32,6 +34,21 @@
         insertafter: EOF
     - name: Apply sysctl config-file
       shell: sysctl -p
+    - name: Create User
+      user:
+        name: '{{ admin_name }}'
+        password: '{{ admin_pass | password_hash("sha512") }}'
+        state: present
+        shell: /bin/bash
+        groups:
+          - sudo
+          - docker
+        createhome: yes
+    - name: Copying the key to new user
+      copy:
+        src: ../.ssh/id_rsa.pub
+        dest: /root/.ssh/authorized_keys
+      ignore_errors: true 
     - name: Commenting the cdrom update
       copy:
         src: ./sources.list
@@ -251,6 +268,7 @@
 - hosts: 192.168.200.200
   vars_files:
     - ./vars.yml
+    - ./users.yml
   tasks:
     - name: Commenting the cdrom update
       copy:
@@ -348,6 +366,8 @@
         name: networking
         state: restarted
 - hosts: central
+  vars_files:
+    - ./users.yml
   tasks: 
     - name: Commenting the cdrom update
       copy:
@@ -506,7 +526,7 @@
        state: started
        image: hewdan4ck/hi:firstver
        ports:
-         - "4444:8080"
+         - "8080:4444"
     - name: COnfigure SSH
       copy:
         src: ./sshd_config
@@ -564,7 +584,7 @@
        state: started
        image: hewdan4ck/hi:firstver
        ports:
-         - "4444:8080"
+         - "8080:4444"
     - name: COnfigure SSH
       copy:
         src: ./sshd_config
