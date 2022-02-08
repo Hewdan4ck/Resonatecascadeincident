@@ -25,6 +25,13 @@
     - name: Install package
       apt: 
         pkg:
+          - chrony
+          - bind9
+          - keepalived
+          - docker
+          - docker.io
+          - pip
+          - curl
           - strongswan
           - nginx
           - ufw
@@ -282,6 +289,8 @@
         project_src: /opt/project
         files:
           - docker-compose.yml
+      ignore_errors: true
+
 
 - hosts: localhost
   tasks:
