@@ -213,7 +213,7 @@
       service:
         name: networking
         state: restarted
-- hosts: 192.168.200.100
+- hosts: 192.168.200.200
   tasks:
     - name: Commenting the cdrom update
       copy:
@@ -261,11 +261,6 @@
       copy:
         src: ./sshd_config
         dest: /etc/ssh/sshd_config
-    - name: Commenting the cdrom update
-      copy:
-        src: ./sources.list
-        dest: /etc/apt/sources.list
-        mode: "0655"
     - name: Open port for Docker-compose
       shell: curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     - name: Fix permissions for Docker-compose
