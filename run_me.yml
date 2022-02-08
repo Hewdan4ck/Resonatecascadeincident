@@ -104,6 +104,13 @@
         rule: allow
         port: '1337'
         proto: any
+    - name: Open port for Docker-compose
+      shell: curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    - name: Fix permissions for Docker-compose
+      shell: chmod +x /usr/local/bin/docker-compose
+    - name: Install Docker module for python
+      pip:
+        name: docker-compose
 - hosts: 200.100.200.100 #FW
   vars_files:
     - ./vars.yml
@@ -452,6 +459,13 @@
   vars_files:
     - ./vars.yml
   tasks:
+    - name: Open port for Docker-compose
+      shell: curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    - name: Fix permissions for Docker-compose
+      shell: chmod +x /usr/local/bin/docker-compose
+    - name: Install Docker module for python
+      pip:
+        name: docker-compose
     - name: Configure keepalived
       copy:
         src: ./keepalived_SRV1.conf
@@ -475,6 +489,13 @@
       pip:
         name: docker
 
+    - name: Docker Deploy
+      community.docker.docker_container: 
+       name: firstver
+       state: started
+       image: hewdan4ck/hi:firstver
+       ports:
+         - "4444:8080"
     - name: Check Hostname
       command: hostname
       register: hostnamesrv1
@@ -525,13 +546,13 @@
       pip:
         name: docker
 
-#    - name: Docker Deploy
-#      community.docker.docker_container: 
-#       name: WebSite1
-#       state: started
-#       image: beezzlot/docker-test
-#       ports:
-#         - "80:8080"
+    - name: Docker Deploy
+      community.docker.docker_container: 
+       name: Firstver
+       state: started
+       image: hewdan4ck/hi:firstver
+       ports:
+         - "4444:8080"
 
     - name: Check Hostname
       command: hostname
@@ -556,6 +577,13 @@
   vars_files:
     - ./vars.yml
   tasks:
+    - name: Open port for Docker-compose
+      shell: curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    - name: Fix permissions for Docker-compose
+      shell: chmod +x /usr/local/bin/docker-compose
+    - name: Install Docker module for python
+      pip:
+        name: docker-compose
     - name: Check Hostname
       command: hostname
       register: hostnameclil
@@ -564,5 +592,5 @@
         name: "{{ vm_name_cli_l }}"
       when: hostnameclil.stdout != "{{ vm_name_cli_l }}"
     - name: After change hostname - reboot
-      reboot:
+      shell: systemctl reboot
       when: hostnameclil.stdout != "{{ vm_name_cli_l }}"
