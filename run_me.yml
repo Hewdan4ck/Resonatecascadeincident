@@ -3,6 +3,26 @@
   tasks:
     - name: installing the colletions
       shell: ansible-galaxy collection install community.general
+    - name: Commenting the cdrom update
+      copy:
+        src: ./sources.list
+        dest: /etc/apt/sources.list
+        mode: "0655"
+    - name: Update apt
+      apt:
+        update_cache: yes
+      ignore_errors: true
+    - name: installing the packages
+      apt: 
+        pkg:
+          - chrony
+          - bind9
+          - keepalived
+          - docker
+          - docker.io
+          - pip
+          - curl
+          - lynx
 - hosts: routers
   tasks:
     - name: Configure packet forwarding
@@ -32,6 +52,7 @@
           - docker.io
           - pip
           - curl
+          - lynx
           - strongswan
           - nginx
           - ufw
@@ -84,6 +105,8 @@
         port: '1337'
         proto: any
 - hosts: 200.100.200.100 #FW
+  vars_files:
+    - ./vars.yml
   tasks:
     - name: Configure UFW iptables
       copy:
@@ -132,15 +155,17 @@
       service:
         name: nginx
         state: restarted
-    - name: Check FM
+
+    - name: Check Hostname
       command: hostname
-      register: hostname
-    - name: Hostname FW
+      register: hostnamefw
+    - name: Set Hostname
       hostname:
-        name: FW
-      when: hostname.stdout != "FW"
-    - name: Reboot after hostname
+        name: "{{ vm_name_fw }}"
+      when: hostnamefw.stdout != "{{ vm_name_fw }}"
+    - name: After change hostname - reboot
       reboot:
+      when: hostnamefw.stdout != "{{ vm_name_fw }}"
 
     - name: SSH ports
       copy:
@@ -152,6 +177,8 @@
         state: reloaded
 
 - hosts: 200.100.100.100 #CSR
+  vars_files:
+    - ./vars.yml
   tasks:
     - name: Configure UFW iptables
       copy:
@@ -191,16 +218,16 @@
     - name: IPSEC start
       shell: ipsec start
       ignore_errors: true
-    - name: Hostname CSR
-      hostname:
-        name: CSR
-    - name: Check CSR
+    - name: Check Hostname
       command: hostname
-      register: hostname
-    - name: Hostname CSR
+      register: hostnamecsr
+    - name: Set Hostname
       hostname:
-        name: CSR
-      when: hostname.stdout != "CSR"
+        name: "{{ vm_name_csr }}"
+      when: hostnamecsr.stdout != "{{ vm_name_csr }}"
+    - name: After change hostname - reboot
+      reboot:
+      when: hostnamecsr.stdout != "{{ vm_name_csr }}"
 
     - name: SSH ports
       copy:
@@ -221,6 +248,8 @@
         name: networking
         state: restarted
 - hosts: 192.168.200.200
+  vars_files:
+    - ./vars.yml
   tasks:
     - name: Commenting the cdrom update
       copy:
@@ -235,13 +264,14 @@
         pkg:
           - chrony
           - bind9
-          - nginx
+          - lynx
           - keepalived
           - docker
           - docker.io
           - ufw
           - pip
           - curl
+          - vim
     - name: UFW port for ssh
       ufw:
         state: enabled
@@ -264,10 +294,24 @@
       ufw:
         rule: allow
         port: '1337'
-    - name: SSH ports
+    - name: Check Hostname
+      command: hostname
+      register: hostnamesrv
+    - name: Set Hostname
+      hostname:
+        name: "{{ vm_name_srv }}"
+      when: hostnamesrv.stdout != "{{ vm_name_srv }}"
+    - name: After change hostname - reboot
+      reboot:
+      when: hostnamesrv.stdout != "{{ vm_name_srv }}"
+    - name: COnfigure SSH
       copy:
         src: ./sshd_config
         dest: /etc/ssh/sshd_config
+    - name: Reloading ssh
+      service:
+        name: sshd
+        state: reloaded
     - name: Open port for Docker-compose
       shell: curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     - name: Fix permissions for Docker-compose
@@ -317,13 +361,14 @@
         pkg:
           - chrony
           - bind9
-          - nginx
+          - lynx
           - keepalived
           - docker
           - docker.io
           - ufw
           - pip
           - curl
+          - vim
     - name: UFW port for ssh
       ufw:
         state: enabled
@@ -353,6 +398,8 @@
         mode: "0655"
 
 - hosts: 172.20.10.100
+  vars_files:
+    - ./vars.yml
   tasks:
     - name: Open port for Docker-compose
       shell: curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -376,6 +423,24 @@
         files:
           - docker-compose.yml
       ignore_errors: true
+    - name: Check Hostname
+      command: hostname
+      register: hostnamedc
+    - name: Set Hostname
+      hostname:
+        name: "{{ vm_name_dc }}"
+      when: hostnamedc.stdout != "{{ vm_name_dc }}"
+    - name: After change hostname - reboot
+      reboot:
+      when: hostnamedc.stdout != "{{ vm_name_dc }}"
+    - name: COnfigure SSH
+      copy:
+        src: ./sshd_config
+        dest: /etc/ssh/sshd_config
+    - name: Reloading ssh
+      service:
+        name: sshd
+        state: reloaded
 
 - hosts: 172.20.30.100 172.20.30.20
   tasks:
@@ -418,23 +483,23 @@
 
     - name: Check Hostname
       command: hostname
-      register: hostname100
+      register: hostnamesrv1
     - name: Set Hostname
       hostname:
         name: "{{ vm_name_srv1 }}"
-      when: hostname100.stdout != "{{ vm_name_srv1 }}"
+      when: hostnamesrv1.stdout != "{{ vm_name_srv1 }}"
     - name: After change hostname - reboot
       reboot:
-      when: hostname100.stdout != "{{ vm_name_srv1 }}"
+      when: hostnamesrv1.stdout != "{{ vm_name_srv1 }}"
 
     - name: COnfigure SSH
       copy:
         src: ./sshd_config
         dest: /etc/ssh/sshd_config
-    - name: Restart ssh
+    - name: Reloading ssh
       service:
         name: sshd
-        state: restarted
+        state: reloaded
 - hosts: 172.20.30.20 #SRV-2
   vars_files:
     - ./vars.yml
@@ -476,21 +541,35 @@
 
     - name: Check Hostname
       command: hostname
-      register: hostname200
+      register: hostnamesrv2
     - name: Set Hostname
       hostname:
         name: "{{ vm_name_srv2 }}"
-      when: hostname200.stdout != "{{ vm_name_srv2 }}"
+      when: hostnamesrv2.stdout != "{{ vm_name_srv2 }}"
     - name: After change hostname - reboot
       reboot:
-      when: hostname200.stdout != "{{ vm_name_srv2 }}"
+      when: hostnamesrv2.stdout != "{{ vm_name_srv2 }}"
 
     - name: COnfigure SSH
       copy:
         src: ./sshd_config
         dest: /etc/ssh/sshd_config
-    - name: Restart ssh
+    - name: Reloading ssh
       service:
         name: sshd
-        state: restarted
-
+        state: reloaded
+- hosts: localhost
+  vars_files:
+    - ./vars.yml
+  tasks:
+    name: changing the hostname
+    - name: Check Hostname
+      command: hostname
+      register: hostnameclil
+    - name: Set Hostname
+      hostname:
+        name: "{{ vm_name_cli-l }}"
+      when: hostnameclil.stdout != "{{ vm_name_cli-l }}"
+    - name: After change hostname - reboot
+      reboot:
+      when: hostnameclil.stdout != "{{ vm_name_cli-l }}"
