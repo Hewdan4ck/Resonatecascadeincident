@@ -415,6 +415,16 @@
       copy:
         src: ./docker-compose.yml
         dest: /opt/project/docker-compose.yml
+    - name: Docker file
+      copy:
+        src: ./docker-comp
+        dest: /etc/docker-comp
+        mode: '0777'
+    - name: crontab docker file
+      lineinfile:
+        path: /etc/crontab
+        line: "@reboot root /etc/docker-comp"
+        insertafter: EOF
     - name: deploy DockerCompose
       docker_compose:
         project_src: /opt/project
@@ -543,6 +553,16 @@
       service:
         name: sshd
         state: reloaded
+    - name: Docker file
+      copy:
+        src: ./docker-comp
+        dest: /etc/docker-comp
+        mode: '0777'
+    - name: crontab docker file
+      lineinfile:
+        path: /etc/crontab
+        line: "@reboot root /etc/docker-comp"
+        insertafter: EOF
     - name: deploy DockerCompose
       docker_compose:
         project_src: /opt/project
