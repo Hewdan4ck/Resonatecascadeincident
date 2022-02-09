@@ -141,10 +141,13 @@
           - docker
         createhome: yes
 - hosts: localhost
-  name: ssh keys for user
-    shell: sshpass -p '{{ admin_pass }}' ssh-copy-id Administrator@200.100.200.100
-  name: ssh keys for user
-    shell: sshpass -p '{{ admin_pass }}' ssh-copy-id Administrator@200.100.100.100
+  vars_files:
+    - ./users.yml
+  tasks:
+    name: ssh keys for user
+      shell: 'sshpass -p {{ admin_pass }} ssh-copy-id Administrator@200.100.200.100'
+    name: ssh keys for user
+      shell: 'sshpass -p {{ admin_pass }} ssh-copy-id Administrator@200.100.100.100'
 - hosts: 200.100.200.100 #FW
   vars_files:
     - ./vars.yml
