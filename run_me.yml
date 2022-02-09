@@ -26,16 +26,15 @@
           - curl
           - lynx
     - name: Create User
-      shell: useradd -m -G sudo,docker -p {{ admin_pass }} {{ admin_name }}
-#      user:
-#        name: '{{ admin_name }}'
-#       password: '{{ admin_pass | password_hash("sha512") }}'
-#       state: present
-#       shell: /bin/bash
-#       groups:
-#         - sudo
-#         - docker
-#       createhome: yes
+      user:
+        name: '{{ admin_name }}'
+        password: '{{ admin_pass | password_hash("sha512") }}'
+        state: present
+        shell: /bin/bash
+        groups:
+          - sudo
+          - docker
+        createhome: yes
     - name: Create folder
       file:
         path: /home/{{ admin_name }}/.ssh
@@ -150,16 +149,16 @@
           - sudo
           - docker
         createhome: yes
-    - name: Create folder
-      file:
-        path: /home/{{ admin_name }}/.ssh
-        state: directory
-        mode: '0777'
-    - name: Copying the key to new user
-      copy:
-        src: ../.ssh/id_rsa.pub
-        dest: /home/{{ admin_name }}/.ssh/authorized_keys
-      ignore_errors: true 
+#    - name: Create folder
+#      file:
+#       path: /home/{{ admin_name }}/.ssh
+#       state: directory
+#       mode: '0777'
+#   - name: Copying the key to new user
+#     copy:
+#       src: ../.ssh/id_rsa.pub
+#       dest: /home/{{ admin_name }}/.ssh/authorized_keys
+#     ignore_errors: true 
     - name: Restarting ssh
       service:
         name: sshd
