@@ -414,7 +414,7 @@
     - ./users.yml
   tasks:
     - name: ssh keys for user
-      shell: 'sshpass -p {{ admin_pass }} ssh-copy-id Administrator@192.168.200.200'
+      shell: 'sshpass -p {{ admin_pass }} ssh-copy-id -p 1111 Administrator@192.168.200.200'
     - name: change network place
       copy:
         src: ./interfacesaf
@@ -693,11 +693,11 @@
     - ./users.yml
   tasks:
     - name: ssh keys for user
-      shell: 'sshpass -p {{ admin_pass }} ssh-copy-id Administrator@172.20.30.100'
+      shell: 'sshpass -p {{ admin_pass }} ssh-copy-id -p 1111 Administrator@172.20.30.100'
     - name: ssh keys for user
-      shell: 'sshpass -p {{ admin_pass }} ssh-copy-id Administrator@172.20.30.20'
+      shell: 'sshpass -p {{ admin_pass }} ssh-copy-id -p 1111 Administrator@172.20.30.20'
     - name: ssh keys for user
-      shell: 'sshpass -p {{ admin_pass }} ssh-copy-id Administrator@172.20.10.100'
+      shell: 'sshpass -p {{ admin_pass }} ssh-copy-id -p 1111 Administrator@172.20.10.100'
     - name: Open port for Docker-compose
       shell: curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     - name: Fix permissions for Docker-compose
