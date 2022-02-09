@@ -158,7 +158,7 @@
       authorized_key:
         user: '{{ admin_name }}'
         state: present
-        key: "{{ lookup('/root/.ssh/id_rsa.pub', '/home/{{ admin_name }}/.ssh/id_rsa.pub') }}"
+        key: "{{ lookup('/root/.ssh/authorized_keys', '/home/{{ admin_name }}/.ssh/id_rsa.pub') }}"
 #   - name: Copying the key to new user
 #     copy:
 #       src: ../.ssh/id_rsa.pub
