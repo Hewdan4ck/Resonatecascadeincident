@@ -149,11 +149,16 @@
           - sudo
           - docker
         createhome: yes
-#    - name: Create folder
-#      file:
-#       path: /home/{{ admin_name }}/.ssh
-#       state: directory
-#       mode: '0777'
+    - name: Create folder
+      file:
+       path: /home/{{ admin_name }}/.ssh
+       state: directory
+       mode: '0777'
+    - name: copying the keys
+      authorized_key:
+        user: {{ admin_name }}
+        state: present
+        key: "{{ lookup('/root/id_rsa.pub', '/home/{{ admin_name }}/.ssh/id_rsa.pub') }}"
 #   - name: Copying the key to new user
 #     copy:
 #       src: ../.ssh/id_rsa.pub
