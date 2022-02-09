@@ -144,9 +144,9 @@
   vars_files:
     - ./users.yml
   tasks:
-    name: ssh keys for user
+    - name: ssh keys for user
       shell: 'sshpass -p {{ admin_pass }} ssh-copy-id Administrator@200.100.200.100'
-    name: ssh keys for user
+    - name: ssh keys for user
       shell: 'sshpass -p {{ admin_pass }} ssh-copy-id Administrator@200.100.100.100'
 - hosts: 200.100.200.100 #FW
   vars_files:
@@ -356,16 +356,6 @@
           - sudo
           - docker
         createhome: yes
-    - name: Create folder
-      file:
-        path: /home/{{ admin_name }}/.ssh
-        state: directory
-        mode: '0777'
-    - name: Copying the key to new user
-      copy:
-        src: ../.ssh/id_rsa.pub
-        dest: /home/{{ admin_name }}/.ssh/authorized_keys
-      ignore_errors: true 
     - name: Check Hostname
       command: hostname
       register: hostnamesrv
@@ -418,8 +408,13 @@
       ignore_errors: true
 
 
+
 - hosts: localhost
+  vars_files:
+    - ./users.yml
   tasks:
+    - name: ssh keys for user
+      shell: 'sshpass -p {{ admin_pass }} ssh-copy-id Administrator@192.168.200.200'
     - name: change network place
       copy:
         src: ./interfacesaf
@@ -705,10 +700,16 @@
       service:
         name: sshd
         state: reloaded
+
 - hosts: localhost
   vars_files:
     - ./vars.yml
+    - ./users.yml
   tasks:
+    - name: ssh keys for user
+      shell: 'sshpass -p {{ admin_pass }} ssh-copy-id Administrator@200.100.200.100'
+    - name: ssh keys for user
+      shell: 'sshpass -p {{ admin_pass }} ssh-copy-id Administrator@200.100.100.100'
     - name: Open port for Docker-compose
       shell: curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     - name: Fix permissions for Docker-compose
