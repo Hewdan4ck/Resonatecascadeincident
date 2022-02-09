@@ -158,13 +158,13 @@
       authorized_key:
         user: '{{ admin_name }}'
         state: present
-        key: "{{ lookup('file', '/home/root/.ssh/authorized_keys') }}"
-#   - name: Copying the key to new user
-#     copy:
-#       src: ../.ssh/id_rsa.pub
-#       dest: /home/{{ admin_name }}/.ssh/authorized_keys
-#     ignore_errors: true 
-    - name: Restarting ssh
+        key: "{{ lookup('file', '/home/{{ admin_name }}/.ssh/id_rsa.pub') }}"
+   - name: Copying the key to new user
+     copy:
+       src: ../.ssh/id_rsa.pub
+       dest: /home/{{ admin_name }}/.ssh/id_rsa.pub
+     ignore_errors: true 
+   - name: Restarting ssh
       service:
         name: sshd
         state: restarted
