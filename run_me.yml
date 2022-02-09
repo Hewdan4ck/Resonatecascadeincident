@@ -25,6 +25,7 @@
           - pip
           - curl
           - lynx
+          - sshpass
     - name: Create User
       user:
         name: '{{ admin_name }}'
@@ -35,16 +36,6 @@
           - sudo
           - docker
         createhome: yes
-    - name: Create folder
-      file:
-        path: /home/{{ admin_name }}/.ssh
-        state: directory
-        mode: '0777'
-    - name: Copying the key to new user
-      copy:
-        src: ../.ssh/id_rsa.pub
-        dest: /home/{{ admin_name }}/.ssh/authorized_keys
-      ignore_errors: true
     - name: Reloading ssh
       service:
         name: sshd
@@ -149,25 +140,11 @@
           - sudo
           - docker
         createhome: yes
-    - name: Create folder
-      file:
-       path: /home/{{ admin_name }}/.ssh
-       state: directory
-       mode: '0777'
-    - name: copying the keys
-      authorized_key:
-        user: '{{ admin_name }}'
-        state: present
-        key: "{{ lookup('file', '/home/{{ admin_name }}/.ssh/id_rsa.pub') }}"
-   - name: Copying the key to new user
-     copy:
-       src: ../.ssh/id_rsa.pub
-       dest: /home/{{ admin_name }}/.ssh/id_rsa.pub
-     ignore_errors: true 
-   - name: Restarting ssh
-      service:
-        name: sshd
-        state: restarted
+- hosts: localhost
+  name: ssh keys for user
+    shell: sshpass -p '{{ admin_pass }}' ssh-copy-id Administrator@200.100.200.100
+  name: ssh keys for user
+    shell: sshpass -p '{{ admin_pass }}' ssh-copy-id Administrator@200.100.100.100
 - hosts: 200.100.200.100 #FW
   vars_files:
     - ./vars.yml
